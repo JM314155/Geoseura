@@ -1,10 +1,9 @@
-### Koripalloseura
-#### Sovelluksessa käyttäjät pystyvät etsimään peliseuraa koripalloon. Ilmoituksessa lukee missä ja milloin pelivuoro on sekä tarvittava pelaajien määrä.
+### Geokätkö seura
+#### Sovelluksessa käyttäjät pystyvät etsimään geokätköjen koordinaatteja ja lisäämään niitä. Ilmoituksessa lukee missä ja milloin se on merkitty ja lyhyt kuvaus
 #### Käyttäjä pystyy luomaan tunnuksen ja kirjautumaan sisään sovellukseen.
-#### Käyttäjä pystyy lisäämään ilmoituksia ja muokkaamaan ja poistamaan niitä.
-#### Käyttäjä näkee sovellukseen lisätyt ilmoitukset.
-#### Käyttäjä pystyy etsimään ilmoituksia sen perusteella, milloin vuoro on.
-#### Käyttäjäsivu näyttää, montako ilmoitusta käyttäjä on lähettänyt ja listan ilmoituksista.
-#### Käyttäjä pystyy valitsemaan ilmoitukselle yhden tai useamman luokittelun (esim. Kumpula Unisport, keskitason pelaaja).
-#### Käyttäjä pystyy ilmoittautumaan pelivuoroon. Ilmoituksessa näytetään, ketkä käyttäjät ovat ilmoittautuneet.
-### 2
+#### Käyttäjä pystyy lisäämään kätköjä ja poistamaan/muokkaamaan niitä.
+#### Käyttäjä näkee sovellukseen lisätyt ilmoitukset kätköistä esim, että joku on käynyt kätköllään.
+#### Käyttäjä pystyy etsimään ilmoituksia sen perusteella, missä kätköt on.
+#### Käyttäjäsivu näyttää, montako ilmoitusta käyttäjä on tehnyt ja listan ilmoituksista ja käyneistä kätköistä.
+#### Käyttäjä pystyy valitsemaan ilmoitukselle yhden tai useamman luokittelun (esim. Helsinki/Suomi ).
+#### Käyttäjä pystyy ilmoittautumaan kätköön johon käyttäjä on määrittänyt koodin joka kätkössä on. Ilmoituksessa näytetään, ketkä käyttäjät ovat ilmoittautuneet.
