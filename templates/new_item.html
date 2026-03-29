@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}Uusi ilmoitus{% endblock %}
+
+{% block content %}
+<h2>Uusi ilmoitus</h2>
+<form action="/create_item" method="post">
+  <p>
+    <label for="title">Otsikko:</label> <br />
+    <input type="text" name="title" id="title" maxlength="50" required />
+  </p>
+  <p>
+    <label for="description">Kuvaus</label>: <br />
+    <textarea name="description" id="description" rows="8" cols="60" maxlength="1000" required></textarea>
+  </p>
+  <p>
+    <label for="start_price">Lähtöhinta</label>: <br />
+    <input type="text" name="start_price" id="start_price" size="8" pattern="[1-9][0-9]{0,3}" required /> €
+  </p>
+  {% for class in classes %}
+  <p>
+    <label for="class{{ class }}">{{ class }}</label>: <br />
+    <select name="classes" id="class{{ class }}">
+      <option value="">(valitse)</option>
+    {% for option in classes[class] %}
+      <option value="{{ class }}:{{ option }}">{{ option }}</option>
+    {% endfor %}
+    </select>
+  </p>
+  {% endfor %}
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+  <input type="submit" value="Luo ilmoitus" />
+</form>
+{% endblock %}
