@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block title %}Ilmoituksen muokkaus{% endblock %}
+
+{% block content %}
+<h2>{{ item.title }}</h2>
+<h3>Ilmoituksen muokkaus</h3>
+<form action="/update_item" method="post">
+  <p>
+    <label for="title">Otsikko</label>: <br />
+    <input type="text" name="title" id="title" value="{{ item.title }}" maxlength="50" required />
+  </p>
+  <p>
+    <label for="description">Kuvaus</label>: <br />
+    <textarea name="description" id="description" rows="8" cols="60" maxlength="1000" required>{{ item.description }}</textarea>
+  </p>
+  <input type="hidden" name="item_id" value="{{ item.id }}" />
+  {% for class in all_classes %}
+  <p>
+    <label for="class{{ class }}">{{ class }}</a>: <br />
+    <select name="classes" id="class{{ class}}">
+      <option value="">(valitse)</option>
+    {% for option in all_classes[class] %}
+      {% if classes[class] == option %}
+      <option value="{{ class }}:{{ option }}" selected>{{ option }}</option>
+      {% else %}
+      <option value="{{ class }}:{{ option }}">{{ option }}</option>
+      {% endif %}
+    {% endfor %}
+    </select>
+  </p>
+  {% endfor %}
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+  <input type="submit" value="Päivitä ilmoitusta" />
+</form>
+<p>
+  <a href="/item/{{ item.id }}">Takaisin ilmoitukseen</a>
+</p>
+{% endblock %}
