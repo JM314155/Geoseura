@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Huutokauppa{% endblock %}
+{% block title %}Geokätkö sovellus{% endblock %}
 
 {% block content %}
 <h2>Ilmoitukset</h2>
@@ -9,7 +9,7 @@
 <div class="item">
 <a href="/item/{{ item.id }}">{{ item.title }}</a> <br />
 Ilmoittaja: <a href="/user/{{ item.user_id }}">{{ item.username }}</a> <br />
-pyytöjen määrä: {{ item.bid_count }}
+Havaintojen määrä: {{ item.bid_count }}
 </div>
 {% endfor %}
 </ul>
