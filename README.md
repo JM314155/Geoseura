@@ -7,3 +7,15 @@
 #### Käyttäjäsivu näyttää, montako ilmoitusta käyttäjä on tehnyt ja listan ilmoituksista ja käyneistä kätköistä.
 #### Käyttäjä pystyy valitsemaan ilmoitukselle yhden tai useamman luokittelun (esim. Helsinki/Suomi ).
 #### Käyttäjä pystyy ilmoittautumaan kätköön johon käyttäjä on määrittänyt koodin joka kätkössä on. Ilmoituksessa näytetään, ketkä käyttäjät ovat ilmoittautuneet.
+
+Sovelluksen asennus
+Asenna flask-kirjasto:
+
+$ pip install flask
+Luo tietokannan taulut ja lisää alkutiedot:
+
+$ sqlite3 database.db < schema.sql
+$ sqlite3 database.db < init.sql
+Voit käynnistää sovelluksen näin:
+
+$ flask run
