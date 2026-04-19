@@ -131,7 +131,7 @@ def create_bid():
 
     minimum_bid = items.get_minimum_bid(item_id)
     if price < minimum_bid:
-        flash("VIRHE: liian pieni huuto")
+        flash("VIRHE: liian pieni määrä ilmotuksia")
         return redirect("/item/" + str(item_id))
 
     items.add_bid(item_id, user_id, price)
