@@ -26,20 +26,20 @@
   {% endfor %}
 {% endif %}
 </ul>
-<h3>Huudot</h3>
+<h3>GeoKätköt</h3>
 <ul>
   {% for bid in bids %}
   <li>{{ bid.price }} €, <a href="/user/{{ bid.user_id }}">{{ bid.username }}</a></li>
   {% endfor %}
 </ul>
 {% if session.user_id %}
-<h3>Uusi huuto</h3>
+<h3>Uusi Ilmoitus</h3>
 <form action="/create_bid" method="post">
   <label for="price">Tarjous</label>:
   <input type="text" name="price" id="price" value="{{ minimum_bid }}" size="8" pattern="[1-9][0-9]{0,3}" required /> €
   <input type="hidden" name="item_id" value="{{ item.id }}">
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
-  <input type="submit" value="Huuda" />
+  <input type="submit" value="imloita" />
 </form>
 {% endif %}
 {% endblock %}
