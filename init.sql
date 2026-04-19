@@ -1,6 +1,6 @@
 DELETE FROM classes;
 
-INSERT INTO classes (title, value) VALUES ('helsinki', 'paikat');
-INSERT INTO classes (title, value) VALUES ('espoo', 'paikat');
-INSERT INTO classes (title, value) VALUES ('vantaa', 'paikat');
-INSERT INTO classes (title, value) VALUES ('tampere', 'paikat');
+INSERT INTO classes (title, value) VALUES ('Helsinki', 'paikat');
+INSERT INTO classes (title, value) VALUES ('Espoo', 'paikat');
+INSERT INTO classes (title, value) VALUES ('Vantaa', 'paikat');
+INSERT INTO classes (title, value) VALUES ('Jyväskylä', 'paikat');
