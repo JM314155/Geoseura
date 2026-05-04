@@ -6,45 +6,38 @@ def get_all_classes():
 
     classes = {}
     for title, value in result:
-        classes[title] = []
-    for title, value in result:
+        if title not in classes:
+            classes[title] = []
         classes[title].append(value)
-
     return classes
 
-def add_item(title, description, start_price, user_id, classes):
-    sql = """INSERT INTO items (title, description, start_price, user_id)
-             VALUES (?, ?, ?, ?)"""
-    db.execute(sql, [title, description, start_price, user_id])
+def add_item(title, description, coordinates, created_date, user_id, loc_title, loc_value):
+    sql = """INSERT INTO items (title, description, coordinates, created_date, user_id)
+             VALUES (?, ?, ?, ?, ?)"""
+    item_id = db.execute(sql, [title, description, coordinates, created_date, user_id])
 
-    item_id = db.last_insert_id()
+    sql_class = "INSERT INTO item_classes (item_id, title, value) VALUES (?, ?, ?)"
+    db.execute(sql_class, [item_id, loc_title, loc_value])
+    
+    return item_id
 
-    sql = "INSERT INTO item_classes (item_id, title, value) VALUES (?, ?, ?)"
-    for class_title, class_value in classes:
-        db.execute(sql, [item_id, class_title, class_value])
-
-def add_bid(item_id, user_id, price):
-    sql = """INSERT INTO bids (item_id, user_id, price)
+def add_visit(item_id, user_id, visit_date):
+    sql = """INSERT INTO visits (item_id, user_id, visit_date)
              VALUES (?, ?, ?)"""
-    db.execute(sql, [item_id, user_id, price])
+    db.execute(sql, [item_id, user_id, visit_date])
 
-def get_bids(item_id):
-    sql = """SELECT bids.price, users.id user_id, users.username
-             FROM bids, users
-             WHERE bids.item_id = ? AND bids.user_id = users.id
-             ORDER BY bids.id DESC"""
+def get_visits(item_id):
+    sql = """SELECT visits.visit_date, users.id user_id, users.username
+             FROM visits
+             JOIN users ON visits.user_id = users.id
+             WHERE visits.item_id = ?
+             ORDER BY visits.visit_date DESC, visits.id DESC"""
     return db.query(sql, [item_id])
 
-def get_minimum_bid(item_id):
-    sql = "SELECT start_price FROM items WHERE id = ?"
-    minimum_bid = int(db.query(sql, [item_id])[0][0])
-
-    sql = "SELECT MAX(price) FROM bids WHERE item_id = ?"
-    max_price = db.query(sql, [item_id])[0][0]
-    if max_price:
-        minimum_bid = max_price + 1
-
-    return minimum_bid
+def get_cache_creation_date(item_id):
+    sql = "SELECT created_date FROM items WHERE id = ?"
+    result = db.query(sql, [item_id])
+    return result[0][0] if result else None
 
 def get_images(item_id):
     sql = "SELECT id FROM images WHERE item_id = ?"
@@ -63,47 +56,42 @@ def remove_image(item_id, image_id):
     sql = "DELETE FROM images WHERE id = ? AND item_id = ?"
     db.execute(sql, [image_id, item_id])
 
-def get_classes(item_id):
+def get_location(item_id):
     sql = "SELECT title, value FROM item_classes WHERE item_id = ?"
-    return db.query(sql, [item_id])
+    res = db.query(sql, [item_id])
+    return res[0] if res else None
 
 def get_items():
     sql = """SELECT items.id, items.title, users.id user_id, users.username,
-                    COUNT(bids.id) bid_count
-             FROM items JOIN users ON items.user_id = users.id
-                        LEFT JOIN bids ON items.id = bids.item_id
+                    COUNT(visits.id) visit_count
+             FROM items 
+             JOIN users ON items.user_id = users.id
+             LEFT JOIN visits ON items.id = visits.item_id
              GROUP BY items.id
              ORDER BY items.id DESC"""
     return db.query(sql)
 
 def get_item(item_id):
-    sql = """SELECT items.id,
-                    items.title,
-                    items.description,
-                    items.start_price,
-                    users.id user_id,
-                    users.username
-             FROM items, users
-             WHERE items.user_id = users.id AND
-                   items.id = ?"""
+    sql = """SELECT items.id, items.title, items.description, items.coordinates, 
+                    items.created_date, users.id user_id, users.username
+             FROM items
+             JOIN users ON items.user_id = users.id
+             WHERE items.id = ?"""
     result = db.query(sql, [item_id])
     return result[0] if result else None
 
-def update_item(item_id, title, description, classes):
-    sql = """UPDATE items SET title = ?,
-                              description = ?
-                          WHERE id = ?"""
-    db.execute(sql, [title, description, item_id])
+def update_item(item_id, title, description, coordinates, loc_title, loc_value):
+    sql = "UPDATE items SET title = ?, description = ?, coordinates = ? WHERE id = ?"
+    db.execute(sql, [title, description, coordinates, item_id])
 
     sql = "DELETE FROM item_classes WHERE item_id = ?"
     db.execute(sql, [item_id])
 
     sql = "INSERT INTO item_classes (item_id, title, value) VALUES (?, ?, ?)"
-    for class_title, class_value in classes:
-        db.execute(sql, [item_id, class_title, class_value])
+    db.execute(sql, [item_id, loc_title, loc_value])
 
 def remove_item(item_id):
-    sql = "DELETE FROM bids WHERE item_id = ?"
+    sql = "DELETE FROM visits WHERE item_id = ?"
     db.execute(sql, [item_id])
     sql = "DELETE FROM images WHERE item_id = ?"
     db.execute(sql, [item_id])
@@ -112,10 +100,12 @@ def remove_item(item_id):
     sql = "DELETE FROM items WHERE id = ?"
     db.execute(sql, [item_id])
 
-def find_items(query):
-    sql = """SELECT id, title
+def find_items(search_query):
+    sql = """SELECT DISTINCT items.id, items.title
              FROM items
-             WHERE title LIKE ? OR description LIKE ?
-             ORDER BY id DESC"""
-    like = "%" + query + "%"
-    return db.query(sql, [like, like])
+             LEFT JOIN item_classes ON items.id = item_classes.item_id
+             WHERE items.title LIKE ? OR items.description LIKE ? 
+                OR item_classes.value LIKE ? OR item_classes.title LIKE ?
+             ORDER BY items.id DESC"""
+    like = "%" + search_query + "%"
+    return db.query(sql, [like, like, like, like])
