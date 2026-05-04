@@ -2,8 +2,7 @@ import re
 import secrets
 import sqlite3
 
-from flask import Flask
-from flask import abort, flash, make_response, redirect, render_template, request, session
+from flask import Flask, abort, flash, make_response, redirect, render_template, request, session
 import markupsafe
 
 import config
@@ -29,6 +28,13 @@ def show_lines(content):
     content = str(markupsafe.escape(content))
     content = content.replace("\n", "<br />")
     return markupsafe.Markup(content)
+
+@app.template_filter()
+def format_date(date_str):
+    if not date_str or len(date_str) != 10:
+        return date_str
+    parts = date_str.split('-')
+    return f"{parts[2]}.{parts[1]}.{parts[0]}"
 
 @app.route("/")
 def index():
@@ -58,19 +64,17 @@ def show_item(item_id):
     item = items.get_item(item_id)
     if not item:
         abort(404)
-    classes = items.get_classes(item_id)
-    bids = items.get_bids(item_id)
-    minimum_bid = items.get_minimum_bid(item_id)
+    location = items.get_location(item_id)
+    visits = items.get_visits(item_id)
     images = items.get_images(item_id)
-    return render_template("show_item.html", item=item, classes=classes,
-                           bids=bids, minimum_bid=minimum_bid, images=images)
+    return render_template("show_item.html", item=item, location=location,
+                           visits=visits, images=images)
 
 @app.route("/image/<int:image_id>")
 def show_image(image_id):
     image = items.get_image(image_id)
     if not image:
         abort(404)
-
     response = make_response(bytes(image))
     response.headers.set("Content-Type", "image/png")
     return response
@@ -87,55 +91,47 @@ def create_item():
     check_csrf()
 
     title = request.form["title"]
-    if not title or len(title) > 50:
-        abort(403)
     description = request.form["description"]
-    if not description or len(description) > 1000:
+    coordinates = request.form["coordinates"]
+    created_date = request.form["created_date"]
+    location = request.form.get("location")
+
+    if not title or len(title) > 50 or not description or len(description) > 1000 or not coordinates:
         abort(403)
-    start_price = request.form["start_price"]
-    if not re.search("^[1-9][0-9]{0,3}$", start_price):
+        
+    if not location or ":" not in location:
         abort(403)
+        
+    if not re.search("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", created_date):
+        abort(403)
+
+    loc_title, loc_value = location.split(":")
     user_id = session["user_id"]
 
-    all_classes = items.get_all_classes()
-
-    classes = []
-    for entry in request.form.getlist("classes"):
-        if entry:
-            class_title, class_value = entry.split(":")
-            if class_title not in all_classes:
-                abort(403)
-            if class_value not in all_classes[class_title]:
-                abort(403)
-            classes.append((class_title, class_value))
-
-    items.add_item(title, description, start_price, user_id, classes)
-
-    item_id = db.last_insert_id()
+    item_id = items.add_item(title, description, coordinates, created_date, user_id, loc_title, loc_value)
     return redirect("/item/" + str(item_id))
 
-@app.route("/create_bid", methods=["POST"])
-def create_bid():
+@app.route("/create_visit", methods=["POST"])
+def create_visit():
     require_login()
     check_csrf()
 
-    price = request.form["price"]
-    if not re.search("^[1-9][0-9]{0,3}$", price):
+    visit_date = request.form["visit_date"]
+    if not re.search("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", visit_date):
         abort(403)
-    price = int(price)
+    
     item_id = request.form["item_id"]
     item = items.get_item(item_id)
     if not item:
         abort(403)
-    user_id = session["user_id"]
-
-    minimum_bid = items.get_minimum_bid(item_id)
-    if price < minimum_bid:
-        flash("VIRHE: liian pieni määrä ilmotuksia")
+        
+    cache_creation_date = items.get_cache_creation_date(item_id)
+    if visit_date < cache_creation_date:
+        flash("VIRHE: Havaintopäivämäärä ei voi olla ennen kätkön luontipäivämäärää.")
         return redirect("/item/" + str(item_id))
 
-    items.add_bid(item_id, user_id, price)
-
+    user_id = session["user_id"]
+    items.add_visit(item_id, user_id, visit_date)
     return redirect("/item/" + str(item_id))
 
 @app.route("/edit_item/<int:item_id>")
@@ -148,13 +144,9 @@ def edit_item(item_id):
         abort(403)
 
     all_classes = items.get_all_classes()
-    classes = {}
-    for my_class in all_classes:
-        classes[my_class] = ""
-    for entry in items.get_classes(item_id):
-        classes[entry["title"]] = entry["value"]
+    location = items.get_location(item_id)
 
-    return render_template("edit_item.html", item=item, classes=classes, all_classes=all_classes)
+    return render_template("edit_item.html", item=item, location=location, all_classes=all_classes)
 
 @app.route("/images/<int:item_id>")
 def edit_images(item_id):
@@ -166,7 +158,6 @@ def edit_images(item_id):
         abort(403)
 
     images = items.get_images(item_id)
-
     return render_template("images.html", item=item, images=images)
 
 @app.route("/add_image", methods=["POST"])
@@ -176,19 +167,17 @@ def add_image():
 
     item_id = request.form["item_id"]
     item = items.get_item(item_id)
-    if not item:
-        abort(404)
-    if item["user_id"] != session["user_id"]:
+    if not item or item["user_id"] != session["user_id"]:
         abort(403)
 
     file = request.files["image"]
     if not file.filename.endswith(".png"):
-        flash("VIRHE: väärä tiedostomuoto")
+        flash("VIRHE: Vain .png-tiedostot ovat sallittuja")
         return redirect("/images/" + str(item_id))
 
     image = file.read()
     if len(image) > 100 * 1024:
-        flash("VIRHE: liian suuri kuva")
+        flash("VIRHE: Kuva on liian suuri")
         return redirect("/images/" + str(item_id))
 
     items.add_image(item_id, image)
@@ -201,9 +190,7 @@ def remove_images():
 
     item_id = request.form["item_id"]
     item = items.get_item(item_id)
-    if not item:
-        abort(404)
-    if item["user_id"] != session["user_id"]:
+    if not item or item["user_id"] != session["user_id"]:
         abort(403)
 
     for image_id in request.form.getlist("image_id"):
@@ -218,31 +205,21 @@ def update_item():
 
     item_id = request.form["item_id"]
     item = items.get_item(item_id)
-    if not item:
-        abort(404)
-    if item["user_id"] != session["user_id"]:
+    if not item or item["user_id"] != session["user_id"]:
         abort(403)
 
     title = request.form["title"]
-    if not title or len(title) > 50:
-        abort(403)
     description = request.form["description"]
-    if not description or len(description) > 1000:
+    coordinates = request.form["coordinates"]
+    location = request.form.get("location")
+
+    if not title or len(title) > 50 or not description or len(description) > 1000 or not coordinates:
+        abort(403)
+    if not location or ":" not in location:
         abort(403)
 
-    all_classes = items.get_all_classes()
-
-    classes = []
-    for entry in request.form.getlist("classes"):
-        if entry:
-            class_title, class_value = entry.split(":")
-            if class_title not in all_classes:
-                abort(403)
-            if class_value not in all_classes[class_title]:
-                abort(403)
-            classes.append((class_title, class_value))
-
-    items.update_item(item_id, title, description, classes)
+    loc_title, loc_value = location.split(":")
+    items.update_item(item_id, title, description, coordinates, loc_title, loc_value)
 
     return redirect("/item/" + str(item_id))
 
@@ -251,9 +228,7 @@ def remove_item(item_id):
     require_login()
 
     item = items.get_item(item_id)
-    if not item:
-        abort(404)
-    if item["user_id"] != session["user_id"]:
+    if not item or item["user_id"] != session["user_id"]:
         abort(403)
 
     if request.method == "GET":
@@ -263,6 +238,7 @@ def remove_item(item_id):
         check_csrf()
         if "remove" in request.form:
             items.remove_item(item_id)
+            flash("Kätkö poistettiin onnistuneesti.")
             return redirect("/")
         else:
             return redirect("/item/" + str(item_id))
@@ -276,17 +252,22 @@ def create():
     username = request.form["username"]
     password1 = request.form["password1"]
     password2 = request.form["password2"]
+    
+    if not username or not password1:
+        flash("VIRHE: Täytä kaikki kentät")
+        return redirect("/register")
+    
     if password1 != password2:
-        flash("VIRHE: salasanat eivät ole samat")
+        flash("VIRHE: Salasanat eivät täsmää")
         return redirect("/register")
 
     try:
         users.create_user(username, password1)
+        flash("Käyttäjätunnus luotu onnistuneesti! Voit nyt kirjautua sisään.")
+        return redirect("/login")
     except sqlite3.IntegrityError:
-        flash("VIRHE: tunnus on jo varattu")
+        flash("VIRHE: Tunnus on jo varattu")
         return redirect("/register")
-
-    return redirect("/")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -304,7 +285,7 @@ def login():
             session["csrf_token"] = secrets.token_hex(16)
             return redirect("/")
         else:
-            flash("VIRHE: väärä tunnus tai salasana")
+            flash("VIRHE: Väärä tunnus tai salasana")
             return redirect("/login")
 
 @app.route("/logout")
