@@ -8,15 +8,16 @@ CREATE TABLE items (
     id INTEGER PRIMARY KEY,
     title TEXT,
     description TEXT,
-    start_price INTEGER,
-    user_id INTEGER REFERENCES users
+    coordinates TEXT,
+    created_date TEXT,
+    user_id INTEGER REFERENCES users(id)
 );
 
-CREATE TABLE bids (
+CREATE TABLE visits (
     id INTEGER PRIMARY KEY,
-    item_id INTEGER REFERENCES items,
-    user_id INTEGER REFERENCES users,
-    price INTEGER
+    item_id INTEGER REFERENCES items(id),
+    user_id INTEGER REFERENCES users(id),
+    visit_date TEXT
 );
 
 CREATE TABLE classes (
@@ -27,13 +28,13 @@ CREATE TABLE classes (
 
 CREATE TABLE item_classes (
     id INTEGER PRIMARY KEY,
-    item_id INTEGER REFERENCES items,
+    item_id INTEGER REFERENCES items(id),
     title TEXT,
     value TEXT
 );
 
 CREATE TABLE images (
     id INTEGER PRIMARY KEY,
-    item_id INTEGER REFERENCES items,
+    item_id INTEGER REFERENCES items(id),
     image BLOB
 );
