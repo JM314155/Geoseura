@@ -1,1 +1,1 @@
-secret_key = "placeholder-key-replace-this"
+secret_key = "placeholder-key-replace-this-before"
