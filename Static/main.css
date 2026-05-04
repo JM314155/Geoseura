@@ -2,19 +2,50 @@ body {
   margin: auto;
   max-width: 50em;
   font-family: sans-serif;
-  background-color: lightblue;
+  background-color: #e8f5e9; 
+  color: #333;
+}
+
+h1, h2, h3 {
+  color: #1b5e20; 
+}
+
+a {
+  color: #2e7d47;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 .item {
-  border: 2px solid black;
-  margin: 1em;
-  padding: 0.2em 0.5em;  
+  border: 2px solid #81c784;
+  margin: 1em 0;
+  padding: 0.5em 1em;  
+  background-color: #fff;
+  border-radius: 5px;
 }
 
 .info {
-  border: 2px solid black;
-  margin: 1em;
+  border: 2px solid #3636c9;
+  margin: 1em 0;
   padding: 0.5em;
-  background-color: blue;
+  background-color: #4ebfde;
   color: white;
+  border-radius: 5px;
+}
+
+input[type="submit"] {
+  background-color: #3c9db3;
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+input[type="submit"]:hover {
+  background-color: #171c79;
 }
