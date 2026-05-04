@@ -1,39 +1,43 @@
 {% extends "layout.html" %}
-
-{% block title %}Ilmoituksen muokkaus{% endblock %}
-
+{% block title %}Muokkaa kätköä{% endblock %}
 {% block content %}
 <h2>{{ item.title }}</h2>
-<h3>Ilmoituksen muokkaus</h3>
+<h3>Kätkön muokkaus</h3>
 <form action="/update_item" method="post">
   <p>
     <label for="title">Otsikko</label>: <br />
     <input type="text" name="title" id="title" value="{{ item.title }}" maxlength="50" required />
   </p>
   <p>
+    <label for="location">Sijainti:</label> <br />
+    <select name="location" id="location" required>
+      <option value="">-- Valitse kaupunki/alue --</option>
+      {% for city, neighborhoods in all_classes.items() %}
+        <optgroup label="{{ city }}">
+          {% for n in neighborhoods %}
+            {% if location and location.title == city and location.value == n %}
+              <option value="{{ city }}:{{ n }}" selected>{{ n }}</option>
+            {% else %}
+              <option value="{{ city }}:{{ n }}">{{ n }}</option>
+            {% endif %}
+          {% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    <label for="coordinates">Koordinaatit</label>: <br />
+    <input type="text" name="coordinates" id="coordinates" value="{{ item.coordinates }}" maxlength="100" required />
+  </p>
+  <p>
     <label for="description">Kuvaus</label>: <br />
     <textarea name="description" id="description" rows="8" cols="60" maxlength="1000" required>{{ item.description }}</textarea>
   </p>
   <input type="hidden" name="item_id" value="{{ item.id }}" />
-  {% for class in all_classes %}
-  <p>
-    <label for="class{{ class }}">{{ class }}</a>: <br />
-    <select name="classes" id="class{{ class}}">
-      <option value="">(valitse)</option>
-    {% for option in all_classes[class] %}
-      {% if classes[class] == option %}
-      <option value="{{ class }}:{{ option }}" selected>{{ option }}</option>
-      {% else %}
-      <option value="{{ class }}:{{ option }}">{{ option }}</option>
-      {% endif %}
-    {% endfor %}
-    </select>
-  </p>
-  {% endfor %}
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
-  <input type="submit" value="Päivitä ilmoitusta" />
+  <input type="submit" value="Tallenna muutokset" />
 </form>
 <p>
-  <a href="/item/{{ item.id }}">Takaisin ilmoitukseen</a>
+  <a href="/item/{{ item.id }}">Takaisin kätkösivulle</a>
 </p>
 {% endblock %}
