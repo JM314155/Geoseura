@@ -1,45 +1,52 @@
 {% extends "layout.html" %}
-
 {% block title %}{{ item.title }}{% endblock %}
-
 {% block content %}
 <h2>{{ item.title }}</h2>
 {% if session.user_id == item.user_id %}
 <p>
-  <a href="/edit_item/{{ item.id }}">Muokkaa</a>
-  <a href="/remove_item/{{ item.id }}">Poista</a>
-  <a href="/images/{{ item.id }}">Kuvat</a>
+  <a href="/edit_item/{{ item.id }}">[Muokkaa]</a>
+  <a href="/remove_item/{{ item.id }}">[Poista]</a>
+  <a href="/images/{{ item.id }}">[Kuvat]</a>
 </p>
 {% endif %}
+
 {% for image in images %}
-<img src="/image/{{ image.id}}" alt="Ilmoituksen kuva" />
+<img src="/image/{{ image.id}}" alt="Geokätkön kuva" style="max-width: 300px; display: block; margin-bottom: 10px;" />
 {% endfor %}
-<p>
+
+<p><strong>Kuvaus:</strong><br/>
   {{ item.description | show_lines }}
 </p>
+
 <ul>
-  <li>alku: {{ item.start_price }} €</li>
-  <li>Ilmoittaja: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></li>
-{% if classes %}
-  {% for class in classes %}
-  <li>{{ class.title}}: {{ class.value }}</li>
-  {% endfor %}
+  <li>Koordinaatit: <strong>{{ item.coordinates }}</strong></li>
+  <li>Piilotettu: {{ item.created_date | format_date }}</li>
+  <li>Piilottaja: <a href="/user/{{ item.user_id }}">{{ item.username }}</a></li>
+{% if location %}
+  <li>Sijainti: {{ location.title }}, {{ location.value }}</li>
 {% endif %}
 </ul>
-<h3>GeoKätköt</h3>
+
+<h3>Kätköllä vierailleet ({{ visits | count }})</h3>
 <ul>
-  {% for bid in bids %}
-  <li>{{ bid.price }} €, <a href="/user/{{ bid.user_id }}">{{ bid.username }}</a></li>
+  {% for visit in visits %}
+  <li>{{ visit.visit_date | format_date }} - <a href="/user/{{ visit.user_id }}">{{ visit.username }}</a></li>
+  {% else %}
+  <li>Ei vielä löytöjä. Ole ensimmäinen!</li>
   {% endfor %}
 </ul>
+
 {% if session.user_id %}
-<h3>Uusi Ilmoitus</h3>
-<form action="/create_bid" method="post">
-  <label for="price">Havaintp</label>:
-  <input type="text" name="price" id="price" value="{{ minimum_bid }}" size="8" pattern="[1-9][0-9]{0,3}" required /> €
+<h3>Kirjaa löytö</h3>
+<form action="/create_visit" method="post">
+  <label for="visit_date">Havaintopäivämäärä</label>:
+  <input type="date" name="visit_date" id="visit_date" required /> 
+  
   <input type="hidden" name="item_id" value="{{ item.id }}">
   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
-  <input type="submit" value="imloita" />
+  <input type="submit" value="Kirjaa löytö" />
 </form>
+{% else %}
+<p><a href="/login">Kirjaudu sisään</a> kirjaamaan löytösi.</p>
 {% endif %}
 {% endblock %}
