@@ -3,16 +3,16 @@
 {% block title %}Kirjaudu sisään{% endblock %}
 
 {% block content %}
-<h2>Kirjaudu sisään</h2>
 
+<h2>Kirjaudu sisään</h2>
 <form action="/login" method="post">
   <p>
     <label for="username">Tunnus</label>: <br />
-    <input type="text" name="username" id="username" />
+    <input type="text" name="username" id="username" required />
   </p>
   <p>
     <label for="password">Salasana</label>: <br />
-    <input type="password" name="password" id="password" />
+    <input type="password" name="password" id="password" required />
   </p>
   <input type="submit" value="Kirjaudu" />
 </form>
