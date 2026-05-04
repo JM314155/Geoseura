@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <title>{% block title %}{% endblock %}</title>
+  <meta charset="utf-8">
+  <title>{% block title %}{% endblock %} | Geokätkösovellus</title>
   <link rel="stylesheet" href="/static/main.css">
 </head>
-
 <body>
-  <h1>kartta</h1>
+  <h1>Geokätkösovellus</h1>
 
   {% if session.user_id %}
   <p>
@@ -17,9 +16,9 @@
 
   <p>
     <a href="/">Etusivu</a> |
-    <a href="/find_item">Etsi ilmoitus</a> |
+    <a href="/find_item">Etsi kätköjä</a> |
   {% if session.user_id %}
-    <a href="/new_item">Uusi ilmoitus</a> |
+    <a href="/new_item">Lisää uusi kätkö</a> |
     <a href="/logout">Kirjaudu ulos</a>
   {% else %}
     <a href="/login">Kirjaudu sisään</a> |
@@ -35,5 +34,4 @@
 
   {% block content %}{% endblock %}  
 </body>
-
 </html>
